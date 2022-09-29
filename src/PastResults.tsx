@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 export function PastResults({ time }: { time: number }) {
   const [results, setResults] = useState<number[]>([])
@@ -9,14 +9,13 @@ export function PastResults({ time }: { time: number }) {
     localStorage.setItem(location.pathname, JSON.stringify(newArr))
   }, [time])
 
+  const todayRef = useRef(new Date().getTime())
   return (
     <div>
       <h5>Past Results:</h5>
       {results.map((r) => (
-        <div key={r}>{r}</div>
+        <div key={r}>{(todayRef.current - r) / 1000}s ago</div>
       ))}
-      <hr />
-      <h5>Current value: {time}</h5>
     </div>
   )
 }
