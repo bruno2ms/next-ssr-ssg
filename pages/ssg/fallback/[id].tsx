@@ -1,6 +1,9 @@
-import { GetServerSideProps, GetStaticProps } from 'next'
+import { GetStaticProps } from 'next'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { DEFAULT_CACHE, DEFAULT_SLEEP } from '../..'
+import { LastGenerated } from '../../../src/LastGenerated'
+import { PastResults } from '../../../src/PastResults'
 import sleep from '../../../src/sleep'
 
 export default function Page({ time }: { time: number }) {
@@ -9,15 +12,31 @@ export default function Page({ time }: { time: number }) {
     setRender((prev) => prev + 1)
   }, [time])
   return (
-    <div>
+    <section>
       <Link href='/'>
         <a>Home</a>
       </Link>
       <hr />
       <h1>This is Static Site Generated</h1>
       <h2>With Fallback</h2>
-      {time ? <h3>Generated {(new Date().getTime() - time) / 1000}sec ago</h3> : null}
-      <h3>Renders: {renders}</h3>
+      <LastGenerated time={time} />
+      <h5>Renders: {renders}</h5>
+
+      <PastResults time={time} />
+      <Revalidate />
+    </section>
+  )
+}
+
+function Revalidate() {
+  const revalidate = useCallback(async () => {
+    fetch('/api/revalidate?pathname=' + location.pathname)
+  }, [])
+
+  return (
+    <div>
+      <hr />
+      <button onClick={revalidate}>Revalidate cache</button>
     </div>
   )
 }
@@ -31,12 +50,12 @@ export async function getStaticPaths() {
 
 export const getStaticProps: GetStaticProps = async ({ params }) => {
   console.log('RUNNING: getStaticProps: ssg/fallback')
-  await sleep(2000)
+  await sleep(DEFAULT_SLEEP)
   return {
     props: { time: new Date().getTime() },
     // If you set a revalidate time of 60, all visitors will see the same generated version of your
     // site for one minute. The only way to invalidate the cache is from someone visiting that page
     // after the minute has passed.
-    revalidate: 10,
+    revalidate: DEFAULT_CACHE,
   }
 }
